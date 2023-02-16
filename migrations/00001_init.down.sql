@@ -1,0 +1,9 @@
+BEGIN;
+
+DROP TABLE IF EXISTS warehouses CASCADE;
+
+DROP TABLE IF EXISTS products CASCADE;
+
+DROP TABLE IF EXISTS warehouse_products CASCADE;
+
+END;
