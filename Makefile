@@ -10,10 +10,10 @@ dropdb:
 	docker exec -it postgres14 dropdb lamoda_db
 
 migrateup:
-	migrate -path db/migration -database "$(DB_URL)" -verbose up
+	migrate -path migrations -database "$(DB_URL)" -verbose up
 
 migratedown:
-	migrate -path db/migration -database "$(DB_URL)" -verbose down
+	migrate -path migration -database "$(DB_URL)" -verbose down
 
 test:
 	go test -v -cover ./...
