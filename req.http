@@ -1,0 +1,20 @@
+### ReserveProducts
+POST http://localhost:8080/reserve HTTP/1.1
+Content-Type: application/json
+
+{
+    "product_codes": ["code1", "code2", "code3"]
+}
+
+
+### ReleaseProducts
+POST http://localhost:8080/release HTTP/1.1
+Content-Type: application/json
+
+{
+    "product_codes": ["code1", "code2", "code3"]
+}
+
+
+### GetRemainingProducts
+GET http://localhost:8080/remaining?warehouse_id=1 HTTP/1.1
