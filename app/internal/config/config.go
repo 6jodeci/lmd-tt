@@ -15,19 +15,18 @@ type Config struct {
 	DBName string `env:"DB_NAME"`
 }
 
-const (
-	EnvConfigPathName  = "CONFIG-PATH"
-	FlagConfigPathName = "config"
-)
-
 var instance *Config
 var once sync.Once
 
 func GetConfig() *Config {
 	once.Do(func() {
-		if err := cleanenv.ReadConfig("../app.env", instance); err != nil {
+		instance = &Config{}
+		if err := cleanenv.ReadConfig("../app.env", &instance); err != nil {
 			log.Fatal("failed to read config", err)
 		}
 	})
+	if instance == nil {
+		log.Fatal("failed to initialize config")
+	}
 	return instance
 }

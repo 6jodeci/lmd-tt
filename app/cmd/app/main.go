@@ -1,5 +1,10 @@
 package main
 
+// @title Warehouse API Documentation
+// @description This is a sample API for a warehouse application
+// @version 1
+// @host localhost:8080
+// @BasePath /api/v1
 import (
 	"database/sql"
 	"errors"
@@ -10,20 +15,39 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// ErrorResponse структура возвращенной ошибки
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// Product структура продукта
 type Product struct {
-	ID       int    `db:"id"`
-	Name     string `db:"name"`
-	Size     string `db:"size"`
-	Code     string `db:"code"`
-	Quantity int    `db:"quantity"`
+	ID       int    `json:"id" db:"id"`
+	Name     string `json:"name" db:"name"`
+	Size     string `json:"size" db:"size"`
+	Code     string `json:"code" db:"code"`
+	Quantity int    `json:"quantity" db:"quantity"`
 }
 
+// Warehouse структура склада
 type Warehouse struct {
-	ID          int    `db:"id"`
-	Name        string `db:"name"`
-	IsAvailable bool   `db:"is_available"`
+	ID          int    `json:"id" db:"id"`
+	Name        string `json:"name" db:"name"`
+	IsAvailable bool   `json:"is_available" db:"is_available"`
 }
 
+// ReserveProducts reserves products
+// @Summary Reserves products
+// @Description Reserves products and updates their quantities
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param productCodes query []string true "Product codes"
+// @Success 204 {string} string ""
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /products/reserve [post]
 // ReserveProducts резервирует продукты
 func ReserveProducts(db *sql.DB, productCodes []string) error {
 	if len(productCodes) == 0 {
@@ -79,6 +103,17 @@ func ReserveProducts(db *sql.DB, productCodes []string) error {
 	return nil
 }
 
+// ReleaseProducts releases products
+// @Summary Releases products
+// @Description Releases reserved products and updates their quantities
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param productCodes query []string true "Product codes"
+// @Success 204 {string} string ""
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /products/release [post]
 // ReleaseProducts отменяет резервирование товаров.
 func ReleaseProducts(db *sql.DB, productCodes []string) error {
 	// Проверяем массив на пустоту массива кодов
@@ -128,6 +163,17 @@ func ReleaseProducts(db *sql.DB, productCodes []string) error {
 	return nil
 }
 
+// GetRemainingProducts returns remaining products
+// @Summary Returns remaining products
+// @Description Returns the remaining products in the warehouse
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param warehouseID query int true "Warehouse ID"
+// @Success 200 {array} Product
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /products/remaining [get]
 // GetRemainingProducts возвращает оставшееся количество продуктов на складе
 func GetRemainingProducts(db *sql.DB, warehouseID int) ([]Product, error) {
 	rows, err := db.Query("SELECT code, quantity FROM products WHERE warehouse_id=$1", warehouseID)
@@ -163,6 +209,9 @@ func main() {
 
 	// Инициализируем Роутер
 	router := gin.Default()
+
+	// Роут для swag документации
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Роут для резервирования продуктов
 	router.POST("/products/reserve", func(c *gin.Context) {
