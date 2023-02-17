@@ -9,6 +9,12 @@ SET default_tablespace = '';
 SET default_with_oids = FALSE;
 
 -- ТАБЛИЦЫ --
+CREATE TABLE warehouse (
+  id serial PRIMARY KEY, 
+  name text, 
+  is_available boolean
+);
+
 CREATE TABLE products (
   id serial PRIMARY KEY, 
   name text, 
@@ -16,11 +22,6 @@ CREATE TABLE products (
   code text UNIQUE, 
   quantity integer NOT NULL, 
   warehouse_id integer NOT NULL REFERENCES warehouse (id)
-);
-CREATE TABLE warehouse (
-  id serial PRIMARY KEY, 
-  name text, 
-  is_available boolean
 );
 
 -- СОЗДАНИЕ ИНДЕКСОВ --

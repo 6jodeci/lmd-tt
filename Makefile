@@ -9,6 +9,9 @@ createdb:
 dropdb:
 	docker exec -it postgres14 dropdb lamoda_db
 
+migratecreate:
+	migrate create -ext sql -dir migrations -seq init_db
+
 migrateup:
 	migrate -path migrations -database "$(DB_URL)" -verbose up
 
@@ -18,4 +21,4 @@ migratedown:
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb dropdb migrateup migratedown test
+.PHONY: postgres createdb dropdb migratecreate migrateup migratedown test

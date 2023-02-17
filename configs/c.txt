@@ -1,9 +1,0 @@
-# PostgreSQL configuration
-POSTGRES_USER=root
-POSTGRES_PASSWORD=secret
-POSTGRES_DB=lamoda_db
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-
-# Golang configuration
-PORT=8080
