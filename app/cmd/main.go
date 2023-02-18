@@ -1,10 +1,5 @@
 package main
 
-// @title Warehouse API Documentation
-// @description This is a sample API for a warehouse application
-// @version 1
-// @host localhost:8080
-// @BasePath /api/v1
 import (
 	"context"
 	"lamoda-test/internal/app"

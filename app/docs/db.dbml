@@ -1,0 +1,32 @@
+Project lamoda_test {
+database_type: 'PostgreSQL'
+Note: 'Warehouse Database Documentation'
+}
+
+
+Table "warehouse" {
+  "id" serial [pk, increment]
+  "name" text
+  "is_available" boolean
+
+Indexes {
+  name [name: "idx_warehouse_name"]
+}
+}
+
+Table "products" {
+  "id" serial [pk, increment]
+  "name" text
+  "size" text
+  "code" text [unique]
+  "quantity" integer [not null]
+  "warehouse_id" integer [not null]
+
+Indexes {
+  code [name: "idx_products_code"]
+  quantity [name: "idx_products_quantity"]
+  (warehouse_id, code) [unique, name: "idx_products_warehouse_code"]
+}
+}
+
+Ref:"warehouse"."id" < "products"."warehouse_id"

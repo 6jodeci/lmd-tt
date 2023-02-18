@@ -21,4 +21,10 @@ migratedown:
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb dropdb migratecreate migrateup migratedown test
+swagger:
+	swag init -g ./app/cmd/main.go -o ./app/docs
+
+db_docs:
+	dbdocs build doc/db.dbml 
+
+.PHONY: postgres createdb dropdb migratecreate migrateup migratedown test swagger db_docs
