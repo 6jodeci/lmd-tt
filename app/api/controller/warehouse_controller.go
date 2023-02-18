@@ -11,6 +11,12 @@ import (
 	"errors"
 )
 
+// ErrorResponse структура возвращенной ошибки
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 // Product структура продукта
 type Product struct {
 	ID       int    `json:"id" db:"id"`

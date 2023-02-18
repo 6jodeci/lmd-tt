@@ -10,12 +10,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// ErrorResponse структура возвращенной ошибки
-type ErrorResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
