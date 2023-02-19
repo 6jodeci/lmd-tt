@@ -28,4 +28,3 @@ CREATE TABLE products (
 CREATE INDEX idx_products_code ON products (code);
 CREATE INDEX idx_products_quantity ON products (quantity);
 CREATE INDEX idx_warehouse_name ON warehouse (name);
-CREATE UNIQUE INDEX idx_products_warehouse_code ON products (warehouse_id, code);

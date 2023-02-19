@@ -1,30 +1,23 @@
 package controller
 
-// @title Warehouse API Documentation
-// @description This is a sample API for a warehouse application
-// @version 1
-// @host localhost:8080
-// @BasePath /api/v1
+//	@title			Warehouse API Documentation
+//	@description	This is a sample API for a warehouse application
+//	@version		1
+//	@host			localhost:8080
 
 import (
 	"database/sql"
 	"errors"
 )
 
-// ErrorResponse структура возвращенной ошибки
-type ErrorResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
 // Product структура продукта
 type Product struct {
-    ID          int     `json:"id"`
-    Name        string  `json:"name"`
-    Size        float64 `json:"size"`
-    Code        string  `json:"code"`
-    Quantity    int     `json:"quantity"`
-    WarehouseID int     `json:"warehouse_id"`
+	ID          int     `json:"id"`
+	Name        string  `json:"name"`
+	Size        float64 `json:"size"`
+	Code        string  `json:"code"`
+	Quantity    int     `json:"quantity"`
+	WarehouseID int     `json:"warehouse_id"`
 }
 
 // Warehouse структура склада
@@ -34,66 +27,93 @@ type Warehouse struct {
 	IsAvailable bool   `json:"is_available" db:"is_available"`
 }
 
-// CreateWarehouse creates a new warehouse in the database
+//	@Summary		Create a new warehouse.
+//	@Description	Create a new warehouse in the database.
+//	@Tags			warehouses
+//	@Accept			json
+//	@Produce		json
+//	@Param			warehouse	body		Warehouse		true	"Warehouse information"
+//	@Success		200			{string}	string			"Warehouse created"
+//	@Failure		400			{object}	ErrorResponse	"Invalid request format"
+//	@Failure		500			{object}	ErrorResponse	"Internal server error"
+//	@Router			/create-warehouse [post]
+// CreateWarehouse создает новый склад и записывает в базу
 func CreateWarehouse(db *sql.DB, w *Warehouse) error {
-    // Prepare query to insert new warehouse
-    stmt, err := db.Prepare("INSERT INTO warehouse(name, is_available) VALUES($1, $2) RETURNING id")
-    if err != nil {
-        return err
-    }
-    defer stmt.Close()
+	// Подготовка запроса для вставки нового склада
+	stmt, err := db.Prepare("INSERT INTO warehouse(name, is_available) VALUES($1, $2) RETURNING id")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
 
-    // Insert new warehouse and get ID
-    err = stmt.QueryRow(w.Name, w.IsAvailable).Scan(&w.ID)
-    if err != nil {
-        return err
-    }
+	// Вставка нового склада и получение его идентификатора
+	err = stmt.QueryRow(w.Name, w.IsAvailable).Scan(&w.ID)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
-
+//	@Summary		Create a new product.
+//	@Description	Create a new product on a specified warehouse.
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Param			product	body		Product			true	"Product information"
+//	@Success		200		{string}	string			"Product created"
+//	@Failure		400		{object}	ErrorResponse	"Invalid request format"
+//	@Failure		500		{object}	ErrorResponse	"Internal server error"
+//	@Router			/create-product [post]
 // CreateProduct создает новый продукт на заданном складе
 func CreateProduct(db *sql.DB, p *Product) error {
-    // Prepare the query for inserting a new product
-    stmt, err := db.Prepare("INSERT INTO products(name, size, code, quantity, warehouse_id) VALUES($1, $2, $3, $4, $5) RETURNING id")
-    if err != nil {
-        return err
-    }
-    defer stmt.Close()
+	// Подготовка запроса для вставки нового продукта
+	stmt, err := db.Prepare("INSERT INTO products(name, size, code, quantity, warehouse_id) VALUES($1, $2, $3, $4, $5) RETURNING id")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
 
-    // Insert the new product and get its ID
-    err = stmt.QueryRow(p.Name, p.Size, p.Code, p.Quantity, p.WarehouseID).Scan(&p.ID)
-    if err != nil {
-        return err
-    }
+	// Вставка нового продукта и получение его идентификатора
+	err = stmt.QueryRow(p.Name, p.Size, p.Code, p.Quantity, p.WarehouseID).Scan(&p.ID)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
+//	@Summary		Delete a product
+//	@Description	Delete a product by its ID.
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int				true	"Product ID"
+//	@Success		200	{string}	string			"Product deleted successfully"
+//	@Failure		400	{object}	ErrorResponse	"Invalid request format"
+//	@Failure		500	{object}	ErrorResponse	"Internal server error"
+//	@Router			/delete-product/:id [delete]
 // DeleteProduct удаляет продукт по ID
 func DeleteProduct(db *sql.DB, id int) error {
-    // Удаляем продукт из базы данных
-    _, err := db.Exec("DELETE FROM products WHERE id = $1", id)
-    if err != nil {
-        return err
-    }
+	// Удаляем продукт из базы данных
+	_, err := db.Exec("DELETE FROM products WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
-
-// ReserveProducts reserves products
-// @Summary Reserves products
-// @Description Reserves products and updates their quantities
-// @Tags products
-// @Accept json
-// @Produce json
-// @Param productCodes query []string true "Product codes"
-// @Success 204 {string} string ""
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
-// @Router /products/reserve [post]
+//	@Summary		Reserves products
+//	@Description	Reserves products and updates their quantities
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Param			productCodes	query		[]string	true	"Product codes"
+//	@Success		204				{string}	string		""
+//	@Failure		400				{object}	ErrorResponse
+//	@Failure		500				{object}	ErrorResponse
+//	@Router			/reserve-products [post]
 // ReserveProducts резервирует продукты
 func ReserveProducts(db *sql.DB, productCodes []string) error {
 	if len(productCodes) == 0 {
@@ -149,19 +169,17 @@ func ReserveProducts(db *sql.DB, productCodes []string) error {
 	return nil
 }
 
-// ReleaseProducts releases products
-// @Summary Releases products
-// @Description Releases reserved products and updates their quantities
-// @Tags products
-// @Accept json
-// @Produce json
-// @Param productCodes query []string true "Product codes"
-// @Success 204 {string} string ""
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
-// @Router /products/release [post]
-// ReleaseProducts отменяет резервирование товаров.
-// ReleaseProducts отменяет резервирование товаров.
+//	@Summary		Releases products
+//	@Description	Releases reserved products and updates their quantities
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Param			productCodes	query		[]string	true	"Product codes"
+//	@Success		204				{string}	string		""
+//	@Failure		400				{object}	ErrorResponse
+//	@Failure		500				{object}	ErrorResponse
+//	@Router			/release-products [post]
+// ReleaseProducts реализует товаровы
 func ReleaseProducts(db *sql.DB, productCodes []string) error {
 	// Проверяем массив на пустоту массива кодов
 	if len(productCodes) == 0 {
@@ -210,39 +228,36 @@ func ReleaseProducts(db *sql.DB, productCodes []string) error {
 	return nil
 }
 
-// GetRemainingProducts returns remaining products
-// @Summary Returns remaining products
-// @Description Returns the remaining products in the warehouse
+// @Description Get remaining products for a given warehouse.
 // @Tags products
 // @Accept json
 // @Produce json
-// @Param warehouseID query int true "Warehouse ID"
-// @Success 200 {array} Product
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
-// @Router /products/remaining [get]
+// @Param warehouseID path int true "Warehouse ID"
+// @Success 200 {array} Product "Remaining products"
+// @Failure 400 {object} ErrorResponse "Invalid request format"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /remaining-products/{warehouseID} [get]
 // GetRemainingProducts возвращает оставшееся количество продуктов на складе
-// TODO!!!!!!!
 func GetRemainingProducts(db *sql.DB, warehouseID int) ([]Product, error) {
-	rows, err := db.Query("SELECT code, quantity FROM products WHERE warehouse_id=$1", warehouseID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// Создаем пустой слайс для хранения результатов
-	var products []Product
 	// Проходимся по строкам, возвращенным запросом, и добавляем каждую строку к слайсу продуктов.
-	for rows.Next() {
-		var p Product
-		if err := rows.Scan(&p.Code, &p.Quantity); err != nil {
-			return nil, err
-		}
-		products = append(products, p)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+    rows, err := db.Query("SELECT code, quantity FROM products WHERE warehouse_id = $1", warehouseID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+	// Создаем пустой слайс для хранения результатов
+    var products []Product
+    for rows.Next() {
+        var p Product
+        if err := rows.Scan(&p.Code, &p.Quantity); err != nil {
+            return nil, err
+        }
+        p.WarehouseID = warehouseID // Set the warehouse ID of the product
+        products = append(products, p)
+    }
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
 
-	return products, nil
+    return products, nil
 }

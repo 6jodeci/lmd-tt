@@ -1,0 +1,11 @@
+# change to app.env
+# PostgreSQL configuration
+POSTGRES_USER=root
+POSTGRES_PASS=secret
+POSTGRES_NAME=lamoda_db
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+
+# Golang configuration
+IP=localhost
+PORT=8080

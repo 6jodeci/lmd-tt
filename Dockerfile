@@ -1,23 +1,21 @@
-# Используем образ Golang для сборки бинарника
-FROM golang:1.17 as builder
-
-# Копируем исходный код в рабочую директорию контейнера
-COPY . /app
-
-# Устанавливаем рабочую директорию
+# Build Stage
+FROM golang:1.18.6-alpine3.15 AS builder
 WORKDIR /app
+COPY . .
+RUN go build -o main ./cmd
+RUN apk add curl 
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz
 
-# Собираем бинарник
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
+# Run Stage
+FROM alpine:3.15
+WORKDIR /app
+COPY --from=builder /app/main .
+COPY --from=builder /app/migrate ./migrate
+COPY configs/app.env .
+COPY start.sh .
+COPY wait-for.sh .
+COPY migrations ./migrations
 
-# Используем образ alpine в качестве окончательного образа
-FROM alpine:latest
-
-# Копируем бинарник в контейнер из образа builder
-COPY --from=builder /app/app /app
-
-# Устанавливаем порт, на котором будет работать приложение
-EXPOSE 8080
-
-# Запускаем приложение
-CMD ["/app"]
+EXPOSE 8080 
+CMD [ "/app/main" ]
+ENTRYPOINT [ "/app/start.sh" ]

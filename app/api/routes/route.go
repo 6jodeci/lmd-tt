@@ -8,9 +8,16 @@ import (
 
 	"lamoda-test/api/controller"
 
+	_ "lamoda-test/docs"
 	"github.com/gin-gonic/gin"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+// ErrorResponse структура возвращенной ошибки
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
 
 func NewRouter(db *sql.DB) *gin.Engine {
 	// Инициализируем роутер gin
@@ -80,7 +87,7 @@ func NewRouter(db *sql.DB) *gin.Engine {
 	r.POST("/reserve-products", func(c *gin.Context) {
 		var productCodes []string
 		if err := c.ShouldBindJSON(&productCodes); err != nil {
-			c.JSON(http.StatusBadRequest, controller.ErrorResponse{
+			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Code:    http.StatusBadRequest,
 				Message: "invalid request body",
 			})
@@ -89,7 +96,7 @@ func NewRouter(db *sql.DB) *gin.Engine {
 
 		err := controller.ReserveProducts(db, productCodes)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, controller.ErrorResponse{
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Code:    http.StatusInternalServerError,
 				Message: err.Error(),
 			})
@@ -103,7 +110,7 @@ func NewRouter(db *sql.DB) *gin.Engine {
 	r.POST("/release-products", func(c *gin.Context) {
 		var productCodes []string
 		if err := c.ShouldBindJSON(&productCodes); err != nil {
-			c.JSON(http.StatusBadRequest, controller.ErrorResponse{
+			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Code:    http.StatusBadRequest,
 				Message: "invalid request body",
 			})
@@ -112,7 +119,7 @@ func NewRouter(db *sql.DB) *gin.Engine {
 
 		err := controller.ReleaseProducts(db, productCodes)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, controller.ErrorResponse{
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Code:    http.StatusInternalServerError,
 				Message: err.Error(),
 			})
@@ -127,7 +134,7 @@ func NewRouter(db *sql.DB) *gin.Engine {
 		warehouseID := c.Param("warehouseID")
 		var id int
 		if _, err := fmt.Sscan(warehouseID, &id); err != nil {
-			c.JSON(http.StatusBadRequest, controller.ErrorResponse{
+			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Code:    http.StatusBadRequest,
 				Message: "invalid warehouse ID",
 			})
@@ -136,7 +143,7 @@ func NewRouter(db *sql.DB) *gin.Engine {
 
 		products, err := controller.GetRemainingProducts(db, id)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, controller.ErrorResponse{
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Code:    http.StatusInternalServerError,
 				Message: err.Error(),
 			})

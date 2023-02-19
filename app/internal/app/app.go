@@ -25,12 +25,9 @@ type App struct {
 }
 
 func NewApp(ctx context.Context, config *config.Config) (*App, error) {
-	logging.GetLogger(ctx).Info("router initializing")
-
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.DBHost, config.DBPort, config.DBUser, config.DBPass, config.DBName,
 	)
-	println(dsn)
 
 	pgClient, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -42,8 +39,7 @@ func NewApp(ctx context.Context, config *config.Config) (*App, error) {
 	}
 
 	router := route.NewRouter(pgClient)
-
-	logging.GetLogger(ctx).Info("swagger docs initializing")
+	logging.GetLogger(ctx).Info("router initializing")
 
 	return &App{
 		cfg:      config,
@@ -86,7 +82,7 @@ func (a *App) startHTTP(ctx context.Context) error {
 		Handler: handler,
 	}
 
-	logging.GetLogger(ctx).Info("application completely initialized and started")
+	logging.GetLogger(ctx).Info("http server completely initialized and started")
 
 	if err = a.httpServer.Serve(listener); err != nil {
 		switch {

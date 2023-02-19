@@ -19,7 +19,7 @@ migratedown:
 	migrate -path migrations -database "$(DB_URL)" -verbose down
 
 test:
-	go test -v -cover ./...
+	cd app && GO111MODULE=on go test -v -cover ./...
 
 swagger:
 	swag init -g ./app/cmd/main.go -o ./app/docs

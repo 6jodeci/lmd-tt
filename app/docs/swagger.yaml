@@ -17,12 +17,112 @@ definitions:
       quantity:
         type: integer
       size:
+        type: number
+      warehouse_id:
+        type: integer
+    type: object
+  controller.Warehouse:
+    properties:
+      id:
+        type: integer
+      is_available:
+        type: boolean
+      name:
         type: string
     type: object
 info:
   contact: {}
 paths:
-  /products/release:
+  /create-product:
+    post:
+      consumes:
+      - application/json
+      description: Create a new product on a specified warehouse.
+      parameters:
+      - description: Product information
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/controller.Product'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product created
+          schema:
+            type: string
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+      summary: Create a new product.
+      tags:
+      - products
+  /create-warehouse:
+    post:
+      consumes:
+      - application/json
+      description: Create a new warehouse in the database.
+      parameters:
+      - description: Warehouse information
+        in: body
+        name: warehouse
+        required: true
+        schema:
+          $ref: '#/definitions/controller.Warehouse'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Warehouse created
+          schema:
+            type: string
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+      summary: Create a new warehouse.
+      tags:
+      - warehouses
+  /delete-product/:id:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a product by its ID.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+      summary: Delete a product
+      tags:
+      - products
+  /release-products:
     post:
       consumes:
       - application/json
@@ -53,7 +153,7 @@ paths:
       summary: Releases products
       tags:
       - products
-  /products/remaining:
+  /remaining-products/:warehouseID:
     get:
       consumes:
       - application/json
@@ -84,7 +184,7 @@ paths:
       summary: Returns remaining products
       tags:
       - products
-  /products/reserve:
+  /reserve-products:
     post:
       consumes:
       - application/json

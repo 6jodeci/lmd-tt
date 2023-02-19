@@ -19,3 +19,17 @@ API предоставляет возможность управления за�
 
 ### Документация Базы Данных:
 - https://dbdocs.io/6jodeci/lamoda_test
+
+### SwaggerUI:
+![image](https://user-images.githubusercontent.com/65400970/219967009-707d8dd7-9335-40f5-b83d-63f3668de439.png)
+
+### Запуск приложения локально:
+- 1) git clone https://github.com/6jodeci/lmd-tt 
+- 2) перейти в папку configs и переименовать файл example-env.txt в app.env
+- 3) make postgres
+- 4) make createdb
+- 5) make migratecreate
+- 6) make migrateup
+- 7) make migrateup
+- 8) cd app/cmd 
+- 9) go run main.go
