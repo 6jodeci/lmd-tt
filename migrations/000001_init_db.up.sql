@@ -10,18 +10,18 @@ SET default_with_oids = FALSE;
 
 -- ТАБЛИЦЫ --
 CREATE TABLE warehouse (
-  id serial PRIMARY KEY, 
-  name text, 
-  is_available boolean
+  id SERIAL PRIMARY KEY, 
+  name TEXT, 
+  is_available BOOLEAN
 );
 
 CREATE TABLE products (
-  id serial PRIMARY KEY, 
-  name text, 
-  size text, 
-  code text UNIQUE, 
-  quantity integer NOT NULL, 
-  warehouse_id integer NOT NULL REFERENCES warehouse (id)
+  id SERIAL PRIMARY KEY, 
+  name TEXT, 
+  size TEXT, 
+  code TEXT UNIQUE, 
+  quantity INTEGER NOT NULL, 
+  warehouse_id INTEGER REFERENCES warehouse(id)
 );
 
 -- СОЗДАНИЕ ИНДЕКСОВ --

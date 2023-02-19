@@ -21,42 +21,43 @@ func NewRouter(db *sql.DB) *gin.Engine {
 		c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
 	})
 
-	// Create warehouse
+	// Обработчик для создания нового склада
 	r.POST("/create-warehouse", func(c *gin.Context) {
+		// Считываем данные склада из тела запроса
 		var w controller.Warehouse
-		if err := c.BindJSON(&w); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		err := c.BindJSON(&w)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid warehouse data"})
 			return
 		}
 
-		if err := controller.CreateWarehouse(db, &w); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Создаем новый склад в базе данных
+		err = controller.CreateWarehouse(db, &w)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusCreated, gin.H{"data": w})
+		// Отправляем ответ с ID нового склада
+		c.JSON(http.StatusCreated, gin.H{"id": w.ID})
 	})
 
-	// Create product
+	// Обработчик для создания нового продукта на заданном складе
 	r.POST("/create-product", func(c *gin.Context) {
 		var p controller.Product
-		if err := c.BindJSON(&p); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		warehouseID, err := strconv.Atoi(c.Param("warehouseID"))
+		err := c.BindJSON(&p)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid warehouse ID"})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid product data"})
 			return
 		}
 
-		if err := controller.CreateProduct(db, &p, warehouseID); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		err = controller.CreateProduct(db, &p)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusCreated, gin.H{"data": p})
+		c.JSON(http.StatusCreated, gin.H{"id": p.ID})
 	})
 
 	// Удаление продукта

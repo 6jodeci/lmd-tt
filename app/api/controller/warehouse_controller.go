@@ -19,11 +19,12 @@ type ErrorResponse struct {
 
 // Product структура продукта
 type Product struct {
-	ID       int    `json:"id" db:"id"`
-	Name     string `json:"name" db:"name"`
-	Size     string `json:"size" db:"size"`
-	Code     string `json:"code" db:"code"`
-	Quantity int    `json:"quantity" db:"quantity"`
+    ID          int     `json:"id"`
+    Name        string  `json:"name"`
+    Size        float64 `json:"size"`
+    Code        string  `json:"code"`
+    Quantity    int     `json:"quantity"`
+    WarehouseID int     `json:"warehouse_id"`
 }
 
 // Warehouse структура склада
@@ -53,16 +54,16 @@ func CreateWarehouse(db *sql.DB, w *Warehouse) error {
 
 
 // CreateProduct создает новый продукт на заданном складе
-func CreateProduct(db *sql.DB, p *Product, warehouseID int) error {
-    // Подготавливаем запрос для вставки нового продукта
+func CreateProduct(db *sql.DB, p *Product) error {
+    // Prepare the query for inserting a new product
     stmt, err := db.Prepare("INSERT INTO products(name, size, code, quantity, warehouse_id) VALUES($1, $2, $3, $4, $5) RETURNING id")
     if err != nil {
         return err
     }
     defer stmt.Close()
 
-    // Вставляем новый продукт и получаем ID
-    err = stmt.QueryRow(p.Name, p.Size, p.Code, p.Quantity, warehouseID).Scan(&p.ID)
+    // Insert the new product and get its ID
+    err = stmt.QueryRow(p.Name, p.Size, p.Code, p.Quantity, p.WarehouseID).Scan(&p.ID)
     if err != nil {
         return err
     }
@@ -160,6 +161,7 @@ func ReserveProducts(db *sql.DB, productCodes []string) error {
 // @Failure 500 {object} ErrorResponse
 // @Router /products/release [post]
 // ReleaseProducts отменяет резервирование товаров.
+// ReleaseProducts отменяет резервирование товаров.
 func ReleaseProducts(db *sql.DB, productCodes []string) error {
 	// Проверяем массив на пустоту массива кодов
 	if len(productCodes) == 0 {
@@ -190,7 +192,7 @@ func ReleaseProducts(db *sql.DB, productCodes []string) error {
 			return err
 		}
 
-		// Обновляем количество продуктов
+		// Обновляем количество продукта
 		_, err = updateStmt.Exec(p.Code)
 		if err != nil {
 			tx.Rollback()
@@ -220,6 +222,7 @@ func ReleaseProducts(db *sql.DB, productCodes []string) error {
 // @Failure 500 {object} ErrorResponse
 // @Router /products/remaining [get]
 // GetRemainingProducts возвращает оставшееся количество продуктов на складе
+// TODO!!!!!!!
 func GetRemainingProducts(db *sql.DB, warehouseID int) ([]Product, error) {
 	rows, err := db.Query("SELECT code, quantity FROM products WHERE warehouse_id=$1", warehouseID)
 	if err != nil {
