@@ -33,6 +33,55 @@ type Warehouse struct {
 	IsAvailable bool   `json:"is_available" db:"is_available"`
 }
 
+// CreateWarehouse creates a new warehouse in the database
+func CreateWarehouse(db *sql.DB, w *Warehouse) error {
+    // Prepare query to insert new warehouse
+    stmt, err := db.Prepare("INSERT INTO warehouse(name, is_available) VALUES($1, $2) RETURNING id")
+    if err != nil {
+        return err
+    }
+    defer stmt.Close()
+
+    // Insert new warehouse and get ID
+    err = stmt.QueryRow(w.Name, w.IsAvailable).Scan(&w.ID)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+
+// CreateProduct создает новый продукт на заданном складе
+func CreateProduct(db *sql.DB, p *Product, warehouseID int) error {
+    // Подготавливаем запрос для вставки нового продукта
+    stmt, err := db.Prepare("INSERT INTO products(name, size, code, quantity, warehouse_id) VALUES($1, $2, $3, $4, $5) RETURNING id")
+    if err != nil {
+        return err
+    }
+    defer stmt.Close()
+
+    // Вставляем новый продукт и получаем ID
+    err = stmt.QueryRow(p.Name, p.Size, p.Code, p.Quantity, warehouseID).Scan(&p.ID)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+// DeleteProduct удаляет продукт по ID
+func DeleteProduct(db *sql.DB, id int) error {
+    // Удаляем продукт из базы данных
+    _, err := db.Exec("DELETE FROM products WHERE id = $1", id)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+
 // ReserveProducts reserves products
 // @Summary Reserves products
 // @Description Reserves products and updates their quantities

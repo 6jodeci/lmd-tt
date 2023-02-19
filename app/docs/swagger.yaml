@@ -1,9 +1,118 @@
-basePath: /api/v1
-host: localhost:8080
+definitions:
+  controller.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  controller.Product:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      quantity:
+        type: integer
+      size:
+        type: string
+    type: object
 info:
   contact: {}
-  description: This is a sample API for a warehouse application
-  title: Warehouse API Documentation
-  version: "1"
-paths: {}
+paths:
+  /products/release:
+    post:
+      consumes:
+      - application/json
+      description: Releases reserved products and updates their quantities
+      parameters:
+      - description: Product codes
+        in: query
+        items:
+          type: string
+        name: productCodes
+        required: true
+        type: array
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+      summary: Releases products
+      tags:
+      - products
+  /products/remaining:
+    get:
+      consumes:
+      - application/json
+      description: Returns the remaining products in the warehouse
+      parameters:
+      - description: Warehouse ID
+        in: query
+        name: warehouseID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/controller.Product'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+      summary: Returns remaining products
+      tags:
+      - products
+  /products/reserve:
+    post:
+      consumes:
+      - application/json
+      description: Reserves products and updates their quantities
+      parameters:
+      - description: Product codes
+        in: query
+        items:
+          type: string
+        name: productCodes
+        required: true
+        type: array
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ErrorResponse'
+      summary: Reserves products
+      tags:
+      - products
 swagger: "2.0"
