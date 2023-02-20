@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	route "lamoda-test/api/routes"
 	config "lamoda-test/internal/config"
+	"lamoda-test/pkg/client/postgresql"
 	"lamoda-test/pkg/logging"
 
 	"github.com/gin-gonic/gin"
@@ -25,16 +27,12 @@ type App struct {
 }
 
 func NewApp(ctx context.Context, config *config.Config) (*App, error) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.DBHost, config.DBPort, config.DBUser, config.DBPass, config.DBName,
-	)
+	cfg := postgresql.NewPgConfig(config.DBUser, config.DBPass, config.DBHost, config.DBPort, config.DBName)
+	maxAttempts := 5
+	maxDelay := 3 * time.Second
 
-	pgClient, err := sql.Open("postgres", dsn)
+	pgClient, err := postgresql.NewClient(context.Background(), maxAttempts, maxDelay, cfg)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = pgClient.Ping(); err != nil {
 		return nil, err
 	}
 

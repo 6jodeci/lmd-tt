@@ -35,8 +35,7 @@ func NewClient(ctx context.Context, maxAttempts int, maxDelay time.Duration, cfg
 		cfg.Username, cfg.Password,
 		cfg.Host, cfg.Port, cfg.Database,
 	)
-	println(dsn)
-
+	
 	err = DoWithAttempts(func() error {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()

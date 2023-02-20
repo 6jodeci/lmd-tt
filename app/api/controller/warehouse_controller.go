@@ -12,12 +12,12 @@ import (
 
 // Product структура продукта
 type Product struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name"`
-	Size        float64 `json:"size"`
-	Code        string  `json:"code"`
-	Quantity    int     `json:"quantity"`
-	WarehouseID int     `json:"warehouse_id"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Size        string `json:"size"`
+	Code        string `json:"code"`
+	Quantity    int    `json:"quantity"`
+	WarehouseID int    `json:"warehouse_id"`
 }
 
 // Warehouse структура склада
@@ -37,6 +37,7 @@ type Warehouse struct {
 //	@Failure		400			{object}	ErrorResponse	"Invalid request format"
 //	@Failure		500			{object}	ErrorResponse	"Internal server error"
 //	@Router			/create-warehouse [post]
+//
 // CreateWarehouse создает новый склад и записывает в базу
 func CreateWarehouse(db *sql.DB, w *Warehouse) error {
 	// Подготовка запроса для вставки нового склада
@@ -65,6 +66,7 @@ func CreateWarehouse(db *sql.DB, w *Warehouse) error {
 //	@Failure		400		{object}	ErrorResponse	"Invalid request format"
 //	@Failure		500		{object}	ErrorResponse	"Internal server error"
 //	@Router			/create-product [post]
+//
 // CreateProduct создает новый продукт на заданном складе
 func CreateProduct(db *sql.DB, p *Product) error {
 	// Подготовка запроса для вставки нового продукта
@@ -93,6 +95,7 @@ func CreateProduct(db *sql.DB, p *Product) error {
 //	@Failure		400	{object}	ErrorResponse	"Invalid request format"
 //	@Failure		500	{object}	ErrorResponse	"Internal server error"
 //	@Router			/delete-product/:id [delete]
+//
 // DeleteProduct удаляет продукт по ID
 func DeleteProduct(db *sql.DB, id int) error {
 	// Удаляем продукт из базы данных
@@ -114,6 +117,7 @@ func DeleteProduct(db *sql.DB, id int) error {
 //	@Failure		400				{object}	ErrorResponse
 //	@Failure		500				{object}	ErrorResponse
 //	@Router			/reserve-products [post]
+//
 // ReserveProducts резервирует продукты
 func ReserveProducts(db *sql.DB, productCodes []string) error {
 	if len(productCodes) == 0 {
@@ -126,20 +130,13 @@ func ReserveProducts(db *sql.DB, productCodes []string) error {
 		return err
 	}
 
-	// Подготавливаем SQL-запрос для обновления количества продуктов
-	updateStmt, err := tx.Prepare("UPDATE products SET quantity = quantity - 1 WHERE code = $1")
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	// Закрываем подготовленный запрос при выходе из функции
-	defer updateStmt.Close()
-
 	// Зарезервируем каждый продукт в цикле
 	for _, code := range productCodes {
-		// Проверяем, существует ли продукт
+		// Заблокируем строку продукта для избежания гонки за ресурсами
+		row := tx.QueryRow("SELECT id, name, size, code, quantity FROM products WHERE code = $1 FOR UPDATE", code)
+
 		var p Product
-		err := db.QueryRow("SELECT id, name, size, code, quantity FROM products WHERE code = $1", code).Scan(&p.ID, &p.Name, &p.Size, &p.Code, &p.Quantity)
+		err := row.Scan(&p.ID, &p.Name, &p.Size, &p.Code, &p.Quantity)
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -151,8 +148,8 @@ func ReserveProducts(db *sql.DB, productCodes []string) error {
 			return errors.New("product is out of stock")
 		}
 
-		// Обновление количества продукта
-		_, err = updateStmt.Exec(p.Code)
+		// Обновляем количество продукта
+		_, err = tx.Exec("UPDATE products SET quantity = quantity - 1 WHERE id = $1", p.ID)
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -162,7 +159,6 @@ func ReserveProducts(db *sql.DB, productCodes []string) error {
 	// Фиксируем транзакцию
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -179,6 +175,7 @@ func ReserveProducts(db *sql.DB, productCodes []string) error {
 //	@Failure		400				{object}	ErrorResponse
 //	@Failure		500				{object}	ErrorResponse
 //	@Router			/release-products [post]
+//
 // ReleaseProducts реализует товаровы
 func ReleaseProducts(db *sql.DB, productCodes []string) error {
 	// Проверяем массив на пустоту массива кодов
@@ -240,24 +237,24 @@ func ReleaseProducts(db *sql.DB, productCodes []string) error {
 // GetRemainingProducts возвращает оставшееся количество продуктов на складе
 func GetRemainingProducts(db *sql.DB, warehouseID int) ([]Product, error) {
 	// Проходимся по строкам, возвращенным запросом, и добавляем каждую строку к слайсу продуктов.
-    rows, err := db.Query("SELECT code, quantity FROM products WHERE warehouse_id = $1", warehouseID)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := db.Query("SELECT code, quantity FROM products WHERE warehouse_id = $1", warehouseID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 	// Создаем пустой слайс для хранения результатов
-    var products []Product
-    for rows.Next() {
-        var p Product
-        if err := rows.Scan(&p.Code, &p.Quantity); err != nil {
-            return nil, err
-        }
-        p.WarehouseID = warehouseID // Set the warehouse ID of the product
-        products = append(products, p)
-    }
-    if err := rows.Err(); err != nil {
-        return nil, err
-    }
+	var products []Product
+	for rows.Next() {
+		var p Product
+		if err := rows.Scan(&p.Code, &p.Quantity); err != nil {
+			return nil, err
+		}
+		p.WarehouseID = warehouseID
+		products = append(products, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
-    return products, nil
+	return products, nil
 }
